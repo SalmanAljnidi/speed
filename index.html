@@ -3,71 +3,62 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Road Fighter - سلمان الجنيدي</title>
-    <link rel="manifest" href="data:application/manifest+json,{%22name%22:%22Road%20Fighter%20Math%22,%22short_name%22:%22RoadMath%22,%22start_url%22:%22.%22,%22display%22:%22standalone%22,%22background_color%22:%22#222%22}">
+    <title>Road Fighter Math - سلمان الجنيدي</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@900&display=swap');
         
         body {
-            margin: 0; padding: 0; background: #1a1a1a;
-            font-family: 'Cairo', sans-serif; overflow: hidden;
-            display: flex; flex-direction: column; align-items: center;
-            color: white; touch-action: none;
+            margin: 0; background: #000; font-family: 'Cairo', sans-serif;
+            color: white; overflow: hidden; display: flex; flex-direction: column; align-items: center;
         }
 
         #game-container {
-            position: relative; width: 100%; max-width: 400px;
-            height: 80vh; background: #555; overflow: hidden;
-            border: 4px solid #333;
+            position: relative; width: 100vw; max-width: 450px; height: 80vh;
+            border: 4px solid #333; overflow: hidden; background: #444;
         }
 
-        canvas { width: 100%; height: 100%; display: block; image-rendering: pixelated; }
+        canvas { width: 100%; height: 100%; image-rendering: pixelated; }
 
-        /* UI Overlays */
+        /* شاشات الواجهة */
         .overlay {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.8); display: flex; flex-direction: column;
-            justify-content: center; align-items: center; text-align: center; z-index: 10;
+            position: absolute; inset: 0; background: rgba(0,0,0,0.9);
+            display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 100;
         }
 
         .btn {
-            background: #e74c3c; color: white; border: none; padding: 10px 20px;
-            margin: 5px; cursor: pointer; font-size: 1.2rem; border-radius: 5px;
-            box-shadow: 0 4px #c0392b; width: 150px;
+            background: #d32f2f; color: white; border: 4px solid #fff; padding: 15px 30px;
+            margin: 10px; cursor: pointer; font-size: 1.4rem; font-weight: bold;
+            box-shadow: 5px 5px 0 #5d0000; width: 220px;
         }
 
-        .btn:active { transform: translateY(2px); box-shadow: 0 2px #c0392b; }
-
-        /* Controls */
-        #controls {
-            display: flex; width: 100%; max-width: 400px; height: 15vh;
-            background: #222; justify-content: space-around; align-items: center;
-        }
-
-        .ctrl-btn {
-            width: 70px; height: 70px; background: #444; border-radius: 50%;
-            display: flex; justify-content: center; align-items: center;
-            font-size: 2rem; user-select: none; -webkit-tap-highlight-color: transparent;
-        }
-
-        #gas-btn { background: #27ae60; width: 80px; height: 80px; }
-
-        /* Question Box */
+        /* نافذة الأسئلة */
         #question-box {
-            position: absolute; top: 20%; left: 5%; width: 90%;
-            background: white; color: black; padding: 20px; border-radius: 10px;
-            display: none; flex-direction: column; align-items: center; z-index: 20;
+            position: absolute; top: 15%; left: 5%; width: 90%; background: #1a237e;
+            border: 4px solid #fff; border-radius: 20px; display: none;
+            flex-direction: column; align-items: center; padding: 20px; z-index: 200;
         }
 
+        .ans-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; }
         .ans-btn {
-            background: #3498db; color: white; border: none; width: 100%;
-            margin: 5px 0; padding: 10px; font-size: 1.1rem; border-radius: 5px;
+            background: #fff; color: #1a237e; border: none; padding: 15px;
+            font-size: 1.5rem; font-weight: bold; border-radius: 10px; cursor: pointer;
         }
 
-        /* Footer & Social */
-        footer { margin-top: 10px; text-align: center; font-size: 0.8rem; }
-        .social { display: flex; gap: 15px; margin-top: 5px; justify-content: center; }
-        .social a { color: white; text-decoration: none; font-size: 1.5rem; }
+        /* التحكم */
+        #controls {
+            display: flex; width: 100%; max-width: 450px; height: 15vh;
+            background: #111; justify-content: space-around; align-items: center;
+        }
+        .ctrl-btn {
+            width: 70px; height: 70px; background: #333; border: 3px solid #666;
+            border-radius: 15px; display: flex; justify-content: center; align-items: center;
+            font-size: 2rem; user-select: none;
+        }
+        #gas-btn { background: #2e7d32; width: 85px; height: 85px; }
+
+        footer { padding: 10px; text-align: center; font-size: 0.8rem; }
+        .social-icons { display: flex; gap: 15px; justify-content: center; margin-top: 5px; }
+        .social-icons a { text-decoration: none; font-size: 1.2rem; }
     </style>
 </head>
 <body>
@@ -76,257 +67,238 @@
     <canvas id="gameCanvas"></canvas>
 
     <div id="start-screen" class="overlay">
-        <h1 style="color:#f1c40f">ROAD FIGHTER MATH</h1>
-        <p>اختر مستوى الصعوبة:</p>
-        <button class="btn" onclick="startGame('easy')">مبتدئ (+ , -)</button>
-        <button class="btn" onclick="startGame('medium')">متوسط (×)</button>
-        <button class="btn" onclick="startGame('hard')">محترف (× , ÷)</button>
+        <h1 style="color: #fdd835; font-size: 3rem; -webkit-text-stroke: 1px red;">ROAD FIGHTER</h1>
+        <p style="font-size: 1.2rem;">اختر المستوى للبدء:</p>
+        <button class="btn" onclick="game.init('easy')">مبتدئ (＋/－)</button>
+        <button class="btn" onclick="game.init('medium')">متوسط (×)</button>
+        <button class="btn" onclick="game.init('hard')">محترف (÷/×)</button>
     </div>
 
     <div id="question-box">
-        <h2 id="q-text">الرياضيات</h2>
-        <div id="timer" style="color:red; font-weight:bold">15</div>
-        <div id="options" style="width:100%"></div>
+        <h2 id="q-text" style="font-size: 2rem; margin: 0;">السؤال</h2>
+        <div id="q-timer" style="font-size: 1.5rem; color: #ffeb3b;">١٥</div>
+        <div id="options" class="ans-grid"></div>
     </div>
 
     <div id="game-over" class="overlay" style="display:none">
-        <h1 id="over-msg">حظاً أوفر في المرة القادمة</h1>
-        <button class="btn" onclick="location.reload()">إعادة المحاولة</button>
+        <h1 style="color: #ff5252;">حظاً أوفر في المرة القادمة</h1>
+        <button class="btn" onclick="location.reload()">إعادة</button>
     </div>
 </div>
 
 <div id="controls">
-    <div class="ctrl-btn" id="left-btn">◀</div>
+    <div class="ctrl-btn" id="l-btn">◀</div>
     <div class="ctrl-btn" id="gas-btn">⛽</div>
-    <div class="ctrl-btn" id="right-btn">▶</div>
+    <div class="ctrl-btn" id="r-btn">▶</div>
 </div>
 
 <footer>
-    جميع الحقوق محفوظة لـ سلمان الجنيدي
-    <div class="social">
-        <a href="https://wa.me/966566996166" target="_blank">🟢 واتساب</a>
-        <a href="https://snapchat.com/t/2fysJJzn" target="_blank">🟡 سناب</a>
+    <div>جميع الحقوق محفوظة لـ سلمان الجنيدي</div>
+    <div class="social-icons">
+        <a href="https://wa.me/966566996166" style="color: #4caf50;">💬 واتساب</a>
+        <a href="https://snapchat.com/t/2fysJJzn" style="color: #ffeb3b;">👻 سناب</a>
     </div>
 </footer>
 
 <script>
-    const canvas = document.getElementById('gameCanvas');
-    const ctx = canvas.getContext('2d');
-    canvas.width = 300;
-    canvas.height = 500;
+/** * تحويل الأرقام إلى عربية
+ */
+const toAr = (n) => n.toString().replace(/\d/g, d => "٠١٢٣٤٥٦٧٨٩"[d]);
 
-    // Game Variables
-    let gameActive = false;
-    let speed = 0;
-    let maxSpeed = 8;
-    let distance = 0;
-    let difficulty = 'easy';
-    let player = { x: 135, y: 400, w: 30, h: 50 };
-    let enemies = [];
-    let roadY = 0;
-    let score = 0;
-    let fuel = 100;
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+canvas.width = 400;
+canvas.height = 600;
 
-    // Controls Logic
-    let keys = { left: false, right: false, gas: false };
-    const setupControls = () => {
-        const bind = (id, key) => {
-            const el = document.getElementById(id);
-            el.onpointerdown = () => keys[key] = true;
-            el.onpointerup = () => keys[key] = false;
-        };
-        bind('left-btn', 'left');
-        bind('right-btn', 'right');
-        bind('gas-btn', 'gas');
-    };
-    setupControls();
+const game = {
+    active: false,
+    speed: 0,
+    fuel: 100,
+    roadY: 0,
+    playerX: 180,
+    enemies: [],
+    difficulty: 'easy',
+    lanes: [75, 145, 215, 285], // مسارات محددة لمنع التداخل
 
-    // Sound Engine (Simple Web Audio)
-    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    function playTone(freq, type, duration) {
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.type = type;
-        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-        gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
-        osc.start();
-        osc.stop(audioCtx.currentTime + duration);
-    }
-
-    function startGame(lvl) {
-        difficulty = lvl;
+    init(lvl) {
+        this.difficulty = lvl;
+        this.active = true;
         document.getElementById('start-screen').style.display = 'none';
-        gameActive = true;
-        animate();
-    }
+        this.loop();
+    },
 
-    function createEnemy() {
-        if (Math.random() < 0.02) {
-            enemies.push({ x: 60 + Math.random() * 150, y: -60, w: 30, h: 50, color: 'yellow' });
-        }
-    }
-
-    function drawRoad() {
-        ctx.fillStyle = '#444'; // Road
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.fillStyle = '#2ecc71'; // Grass
-        ctx.fillRect(0, 0, 50, canvas.height);
-        ctx.fillRect(250, 0, 50, canvas.height);
-        
-        // Lines
-        ctx.strokeStyle = 'white';
-        ctx.setLineDash([20, 20]);
-        ctx.lineDashOffset = -roadY;
-        ctx.beginPath();
-        ctx.moveTo(150, 0); ctx.lineTo(150, canvas.height);
-        ctx.stroke();
-    }
-
-    function drawCar(c, color) {
+    drawCar(x, y, type) {
+        // رسم سيارة بأسلوب بكسل ارت
+        const color = type === 'player' ? '#f44336' : '#ffeb3b';
         ctx.fillStyle = color;
-        ctx.fillRect(c.x, c.y, c.w, c.h); // Body
-        ctx.fillStyle = 'black';
-        ctx.fillRect(c.x-2, c.y+5, 5, 10); // Wheels
-        ctx.fillRect(c.x+c.w-3, c.y+5, 5, 10);
-        ctx.fillRect(c.x-2, c.y+35, 5, 10);
-        ctx.fillRect(c.x+c.w-3, c.y+35, 5, 10);
-    }
+        ctx.fillRect(x, y, 35, 60); // الجسم الرئيسي
+        // السقف والزجاج
+        ctx.fillStyle = '#222';
+        ctx.fillRect(x+5, y+15, 25, 20);
+        // المصابيح
+        ctx.fillStyle = type === 'player' ? '#fff' : '#f44336';
+        ctx.fillRect(x+5, y, 8, 5); ctx.fillRect(x+22, y, 8, 5);
+        // الإطارات
+        ctx.fillStyle = '#000';
+        ctx.fillRect(x-4, y+8, 4, 12); ctx.fillRect(x+35, y+8, 4, 12);
+        ctx.fillRect(x-4, y+40, 4, 12); ctx.fillRect(x+35, y+40, 4, 12);
+    },
 
-    function showQuestion() {
-        gameActive = false;
-        const box = document.getElementById('question-box');
-        const qText = document.getElementById('q-text');
-        const opts = document.getElementById('options');
-        const timerEl = document.getElementById('timer');
-        box.style.display = 'flex';
+    spawnEnemy() {
+        if (this.enemies.length < 3 && Math.random() < 0.03) {
+            const lane = this.lanes[Math.floor(Math.random() * this.lanes.length)];
+            // التأكد من أن المسار خالٍ في الأعلى
+            if (!this.enemies.some(e => e.y < 100 && e.x === lane)) {
+                this.enemies.push({ x: lane, y: -100, speed: 2 + Math.random() * 2 });
+            }
+        }
+    },
+
+    update() {
+        if (!this.active) return;
+
+        if (input.gas) {
+            this.speed = Math.min(this.speed + 0.15, 10);
+            this.fuel -= 0.04;
+        } else {
+            this.speed = Math.max(this.speed - 0.1, 0);
+        }
+
+        if (this.fuel <= 0) this.over();
+
+        this.roadY += this.speed;
+        if (input.left && this.playerX > 60) this.playerX -= 5;
+        if (input.right && this.playerX < 305) this.playerX += 5;
+
+        this.spawnEnemy();
+        this.enemies.forEach((en, i) => {
+            en.y += (this.speed * 0.5) + en.speed;
+            
+            // تصادم دقيق
+            if (this.playerX < en.x + 35 && this.playerX + 35 > en.x &&
+                500 < en.y + 60 && 500 + 60 > en.y) {
+                this.ask();
+            }
+
+            if (en.y > canvas.height) this.enemies.splice(i, 1);
+        });
+    },
+
+    draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
         
-        let q = generateMath(difficulty);
-        qText.innerText = q.txt;
-        opts.innerHTML = '';
+        // رسم الطريق بستايل صخر
+        ctx.fillStyle = '#2e7d32'; ctx.fillRect(0,0, canvas.width, canvas.height); // عشب
+        ctx.fillStyle = '#424242'; ctx.fillRect(50, 0, 300, canvas.height); // طريق
+        
+        // خطوط الطريق
+        ctx.strokeStyle = '#fff'; ctx.setLineDash([30, 30]);
+        ctx.lineDashOffset = -this.roadY;
+        ctx.lineWidth = 4;
+        [125, 200, 275].forEach(x => {
+            ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke();
+        });
+
+        // اللاعب والأعداء
+        this.drawCar(this.playerX, 500, 'player');
+        this.enemies.forEach(en => this.drawCar(en.x, en.y, 'enemy'));
+
+        // العدادات بالأرقام العربية
+        ctx.fillStyle = "white"; ctx.font = "bold 22px Cairo";
+        ctx.fillText(`الوقود: ${toAr(Math.ceil(this.fuel))}%`, 60, 40);
+        ctx.fillText(`السرعة: ${toAr(Math.floor(this.speed * 40))}`, 250, 40);
+    },
+
+    ask() {
+        this.active = false;
+        const box = document.getElementById('question-box');
+        const qData = this.genQ();
+        box.style.display = 'flex';
+        document.getElementById('q-text').innerText = qData.txt;
+        
+        const optsDiv = document.getElementById('options');
+        optsDiv.innerHTML = '';
         
         let timeLeft = 15;
-        timerEl.innerText = timeLeft;
-        let timerInt = setInterval(() => {
+        const timerEl = document.getElementById('q-timer');
+        timerEl.innerText = toAr(timeLeft);
+
+        const timerId = setInterval(() => {
             timeLeft--;
-            timerEl.innerText = timeLeft;
-            if (timeLeft <= 0) {
-                clearInterval(timerInt);
-                gameOver();
-            }
+            timerEl.innerText = toAr(timeLeft);
+            if (timeLeft <= 0) { clearInterval(timerId); this.over(); }
         }, 1000);
 
-        q.options.forEach(opt => {
-            let b = document.createElement('button');
+        qData.opts.forEach(o => {
+            const b = document.createElement('button');
             b.className = 'ans-btn';
-            b.innerText = opt.toLocaleString('ar-EG');
+            b.innerText = toAr(o);
             b.onclick = () => {
-                clearInterval(timerInt);
-                if (opt === q.ans) {
+                clearInterval(timerId);
+                if (o === qData.ans) {
                     box.style.display = 'none';
-                    gameActive = true;
-                    fuel = 100;
-                    enemies = []; // Clear obstacles
-                    playTone(600, 'square', 0.2);
-                    animate();
-                } else {
-                    gameOver();
-                }
+                    this.fuel = 100; this.enemies = []; this.active = true; this.loop();
+                } else { this.over(); }
             };
-            opts.appendChild(b);
+            optsDiv.appendChild(b);
         });
-    }
+    },
 
-    function generateMath(lvl) {
-        let a, b, ans, txt, ops = [];
-        if (lvl === 'easy') {
-            a = Math.floor(Math.random() * 11);
-            b = Math.floor(Math.random() * 11);
-            if (Math.random() > 0.5) { txt = `${a} + ${b}`; ans = a + b; }
-            else { txt = `${Math.max(a,b)} - ${Math.min(a,b)}`; ans = Math.max(a,b) - Math.min(a,b); }
-        } else if (lvl === 'medium') {
-            a = Math.floor(Math.random() * 11);
-            b = Math.floor(Math.random() * 11);
-            txt = `${a} × ${b}`; ans = a * b;
+    genQ() {
+        let a, b, ans, txt;
+        if (this.difficulty === 'easy') {
+            a = Math.floor(Math.random()*11); b = Math.floor(Math.random()*11);
+            if (Math.random()>0.5) { txt = `${toAr(a)} ＋ ${toAr(b)}`; ans = a+b; }
+            else { txt = `${toAr(Math.max(a,b))} － ${toAr(Math.min(a,b))}`; ans = Math.max(a,b)-Math.min(a,b); }
+        } else if (this.difficulty === 'medium') {
+            a = Math.floor(Math.random()*11); b = Math.floor(Math.random()*11);
+            txt = `${toAr(a)} × ${toAr(b)}`; ans = a*b;
         } else {
-            if (Math.random() > 0.5) {
-                a = Math.floor(Math.random() * 13);
-                b = Math.floor(Math.random() * 13);
-                txt = `${a} × ${b}`; ans = a * b;
+            if (Math.random()>0.5) {
+                a = Math.floor(Math.random()*13); b = Math.floor(Math.random()*13);
+                txt = `${toAr(a)} × ${toAr(b)}`; ans = a*b;
             } else {
-                ans = Math.floor(Math.random() * 10);
-                b = Math.floor(Math.random() * 9) + 1;
-                a = ans * b;
-                txt = `${a} ÷ ${b}`;
+                ans = Math.floor(Math.random()*10); b = Math.floor(Math.random()*9)+1;
+                a = ans * b; txt = `${toAr(a)} ÷ ${toAr(b)}`;
             }
         }
-        ops = [ans, ans + 2, ans - 1, ans + 5].sort(() => Math.random() - 0.5);
-        return { txt, ans, options: ops };
-    }
+        let opts = [ans, ans+1, ans+10, ans-1].filter(n => n >= 0).sort(() => Math.random()-0.5);
+        return { txt, ans, opts: [...new Set(opts)].slice(0,4) };
+    },
 
-    function gameOver() {
-        gameActive = false;
+    over() {
+        this.active = false;
         document.getElementById('question-box').style.display = 'none';
         document.getElementById('game-over').style.display = 'flex';
-        playTone(150, 'sawtooth', 0.5);
+    },
+
+    loop() {
+        if (!this.active) return;
+        this.update();
+        this.draw();
+        requestAnimationFrame(() => this.loop());
     }
+};
 
-    function animate() {
-        if (!gameActive) return;
-
-        ctx.clearRect(0,0, canvas.width, canvas.height);
-        
-        // Speed & Fuel Logic
-        if (keys.gas) { 
-            speed = Math.min(speed + 0.1, maxSpeed); 
-            fuel -= 0.05;
-            if (audioCtx.state === 'suspended') audioCtx.resume();
-            if (Math.random() > 0.9) playTone(100 + speed*10, 'sawtooth', 0.05);
-        } else { 
-            speed = Math.max(speed - 0.1, 0); 
-        }
-
-        if (fuel <= 0) gameOver();
-
-        roadY += speed;
-        drawRoad();
-
-        // Player Movement
-        if (keys.left && player.x > 50) player.x -= 3;
-        if (keys.right && player.x < 220) player.x += 3;
-        drawCar(player, 'red');
-
-        // Enemies
-        createEnemy();
-        enemies.forEach((en, index) => {
-            en.y += speed * 0.5 + 2;
-            drawCar(en, 'yellow');
-            
-            // Collision
-            if (player.x < en.x + en.w && player.x + player.w > en.x &&
-                player.y < en.y + en.h && player.y + player.h > en.y) {
-                playTone(200, 'square', 0.3);
-                showQuestion();
-            }
-            if (en.y > canvas.height) enemies.splice(index, 1);
-        });
-
-        // UI Text
-        ctx.fillStyle = "white";
-        ctx.font = "16px Cairo";
-        ctx.fillText(`السرعة: ${Math.floor(speed * 50)} كم/س`, 60, 30);
-        ctx.fillText(`الوقود: ${Math.floor(fuel)}%`, 60, 55);
-
-        requestAnimationFrame(animate);
-    }
-
-    // Service Worker for Offline access
-    if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-            navigator.serviceWorker.register('data:application/javascript,self.addEventListener("fetch", (e) => e.respondWith(fetch(e.request)))');
-        });
-    }
+const input = { left: false, right: false, gas: false };
+// كيبورد
+window.onkeydown = (e) => {
+    if (e.key === 'ArrowLeft' || e.key === 'a') input.left = true;
+    if (e.key === 'ArrowRight' || e.key === 'd') input.right = true;
+    if (e.key === 'ArrowUp' || e.key === 'w' || e.key === ' ') input.gas = true;
+};
+window.onkeyup = (e) => {
+    if (e.key === 'ArrowLeft' || e.key === 'a') input.left = false;
+    if (e.key === 'ArrowRight' || e.key === 'd') input.right = false;
+    if (e.key === 'ArrowUp' || e.key === 'w' || e.key === ' ') input.gas = false;
+};
+// لمس
+const setupBtn = (id, key) => {
+    const el = document.getElementById(id);
+    el.onpointerdown = (e) => { e.preventDefault(); input[key] = true; };
+    el.onpointerup = (e) => { e.preventDefault(); input[key] = false; };
+};
+setupBtn('l-btn', 'left'); setupBtn('r-btn', 'right'); setupBtn('gas-btn', 'gas');
 </script>
 </body>
 </html>
