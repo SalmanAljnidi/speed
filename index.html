@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Road Fighter - سلمان الجنيدي</title>
+    <link rel="manifest" href="data:application/manifest+json,{%22name%22:%22Road%20Fighter%20Math%22,%22short_name%22:%22RoadMath%22,%22start_url%22:%22.%22,%22display%22:%22standalone%22,%22background_color%22:%22#222%22}">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@700&display=swap');
+        
+        body {
+            margin: 0; padding: 0; background: #1a1a1a;
+            font-family: 'Cairo', sans-serif; overflow: hidden;
+            display: flex; flex-direction: column; align-items: center;
+            color: white; touch-action: none;
+        }
+
+        #game-container {
+            position: relative; width: 100%; max-width: 400px;
+            height: 80vh; background: #555; overflow: hidden;
+            border: 4px solid #333;
+        }
+
+        canvas { width: 100%; height: 100%; display: block; image-rendering: pixelated; }
+
+        /* UI Overlays */
+        .overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8); display: flex; flex-direction: column;
+            justify-content: center; align-items: center; text-align: center; z-index: 10;
+        }
+
+        .btn {
+            background: #e74c3c; color: white; border: none; padding: 10px 20px;
+            margin: 5px; cursor: pointer; font-size: 1.2rem; border-radius: 5px;
+            box-shadow: 0 4px #c0392b; width: 150px;
+        }
+
+        .btn:active { transform: translateY(2px); box-shadow: 0 2px #c0392b; }
+
+        /* Controls */
+        #controls {
+            display: flex; width: 100%; max-width: 400px; height: 15vh;
+            background: #222; justify-content: space-around; align-items: center;
+        }
+
+        .ctrl-btn {
+            width: 70px; height: 70px; background: #444; border-radius: 50%;
+            display: flex; justify-content: center; align-items: center;
+            font-size: 2rem; user-select: none; -webkit-tap-highlight-color: transparent;
+        }
+
+        #gas-btn { background: #27ae60; width: 80px; height: 80px; }
+
+        /* Question Box */
+        #question-box {
+            position: absolute; top: 20%; left: 5%; width: 90%;
+            background: white; color: black; padding: 20px; border-radius: 10px;
+            display: none; flex-direction: column; align-items: center; z-index: 20;
+        }
+
+        .ans-btn {
+            background: #3498db; color: white; border: none; width: 100%;
+            margin: 5px 0; padding: 10px; font-size: 1.1rem; border-radius: 5px;
+        }
+
+        /* Footer & Social */
+        footer { margin-top: 10px; text-align: center; font-size: 0.8rem; }
+        .social { display: flex; gap: 15px; margin-top: 5px; justify-content: center; }
+        .social a { color: white; text-decoration: none; font-size: 1.5rem; }
+    </style>
+</head>
+<body>
+
+<div id="game-container">
+    <canvas id="gameCanvas"></canvas>
+
+    <div id="start-screen" class="overlay">
+        <h1 style="color:#f1c40f">ROAD FIGHTER MATH</h1>
+        <p>اختر مستوى الصعوبة:</p>
+        <button class="btn" onclick="startGame('easy')">مبتدئ (+ , -)</button>
+        <button class="btn" onclick="startGame('medium')">متوسط (×)</button>
+        <button class="btn" onclick="startGame('hard')">محترف (× , ÷)</button>
+    </div>
+
+    <div id="question-box">
+        <h2 id="q-text">الرياضيات</h2>
+        <div id="timer" style="color:red; font-weight:bold">15</div>
+        <div id="options" style="width:100%"></div>
+    </div>
+
+    <div id="game-over" class="overlay" style="display:none">
+        <h1 id="over-msg">حظاً أوفر في المرة القادمة</h1>
+        <button class="btn" onclick="location.reload()">إعادة المحاولة</button>
+    </div>
+</div>
+
+<div id="controls">
+    <div class="ctrl-btn" id="left-btn">◀</div>
+    <div class="ctrl-btn" id="gas-btn">⛽</div>
+    <div class="ctrl-btn" id="right-btn">▶</div>
+</div>
+
+<footer>
+    جميع الحقوق محفوظة لـ سلمان الجنيدي
+    <div class="social">
+        <a href="https://wa.me/966566996166" target="_blank">🟢 واتساب</a>
+        <a href="https://snapchat.com/t/2fysJJzn" target="_blank">🟡 سناب</a>
+    </div>
+</footer>
+
+<script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = 300;
+    canvas.height = 500;
+
+    // Game Variables
+    let gameActive = false;
+    let speed = 0;
+    let maxSpeed = 8;
+    let distance = 0;
+    let difficulty = 'easy';
+    let player = { x: 135, y: 400, w: 30, h: 50 };
+    let enemies = [];
+    let roadY = 0;
+    let score = 0;
+    let fuel = 100;
+
+    // Controls Logic
+    let keys = { left: false, right: false, gas: false };
+    const setupControls = () => {
+        const bind = (id, key) => {
+            const el = document.getElementById(id);
+            el.onpointerdown = () => keys[key] = true;
+            el.onpointerup = () => keys[key] = false;
+        };
+        bind('left-btn', 'left');
+        bind('right-btn', 'right');
+        bind('gas-btn', 'gas');
+    };
+    setupControls();
+
+    // Sound Engine (Simple Web Audio)
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    function playTone(freq, type, duration) {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+        osc.start();
+        osc.stop(audioCtx.currentTime + duration);
+    }
+
+    function startGame(lvl) {
+        difficulty = lvl;
+        document.getElementById('start-screen').style.display = 'none';
+        gameActive = true;
+        animate();
+    }
+
+    function createEnemy() {
+        if (Math.random() < 0.02) {
+            enemies.push({ x: 60 + Math.random() * 150, y: -60, w: 30, h: 50, color: 'yellow' });
+        }
+    }
+
+    function drawRoad() {
+        ctx.fillStyle = '#444'; // Road
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = '#2ecc71'; // Grass
+        ctx.fillRect(0, 0, 50, canvas.height);
+        ctx.fillRect(250, 0, 50, canvas.height);
+        
+        // Lines
+        ctx.strokeStyle = 'white';
+        ctx.setLineDash([20, 20]);
+        ctx.lineDashOffset = -roadY;
+        ctx.beginPath();
+        ctx.moveTo(150, 0); ctx.lineTo(150, canvas.height);
+        ctx.stroke();
+    }
+
+    function drawCar(c, color) {
+        ctx.fillStyle = color;
+        ctx.fillRect(c.x, c.y, c.w, c.h); // Body
+        ctx.fillStyle = 'black';
+        ctx.fillRect(c.x-2, c.y+5, 5, 10); // Wheels
+        ctx.fillRect(c.x+c.w-3, c.y+5, 5, 10);
+        ctx.fillRect(c.x-2, c.y+35, 5, 10);
+        ctx.fillRect(c.x+c.w-3, c.y+35, 5, 10);
+    }
+
+    function showQuestion() {
+        gameActive = false;
+        const box = document.getElementById('question-box');
+        const qText = document.getElementById('q-text');
+        const opts = document.getElementById('options');
+        const timerEl = document.getElementById('timer');
+        box.style.display = 'flex';
+        
+        let q = generateMath(difficulty);
+        qText.innerText = q.txt;
+        opts.innerHTML = '';
+        
+        let timeLeft = 15;
+        timerEl.innerText = timeLeft;
+        let timerInt = setInterval(() => {
+            timeLeft--;
+            timerEl.innerText = timeLeft;
+            if (timeLeft <= 0) {
+                clearInterval(timerInt);
+                gameOver();
+            }
+        }, 1000);
+
+        q.options.forEach(opt => {
+            let b = document.createElement('button');
+            b.className = 'ans-btn';
+            b.innerText = opt.toLocaleString('ar-EG');
+            b.onclick = () => {
+                clearInterval(timerInt);
+                if (opt === q.ans) {
+                    box.style.display = 'none';
+                    gameActive = true;
+                    fuel = 100;
+                    enemies = []; // Clear obstacles
+                    playTone(600, 'square', 0.2);
+                    animate();
+                } else {
+                    gameOver();
+                }
+            };
+            opts.appendChild(b);
+        });
+    }
+
+    function generateMath(lvl) {
+        let a, b, ans, txt, ops = [];
+        if (lvl === 'easy') {
+            a = Math.floor(Math.random() * 11);
+            b = Math.floor(Math.random() * 11);
+            if (Math.random() > 0.5) { txt = `${a} + ${b}`; ans = a + b; }
+            else { txt = `${Math.max(a,b)} - ${Math.min(a,b)}`; ans = Math.max(a,b) - Math.min(a,b); }
+        } else if (lvl === 'medium') {
+            a = Math.floor(Math.random() * 11);
+            b = Math.floor(Math.random() * 11);
+            txt = `${a} × ${b}`; ans = a * b;
+        } else {
+            if (Math.random() > 0.5) {
+                a = Math.floor(Math.random() * 13);
+                b = Math.floor(Math.random() * 13);
+                txt = `${a} × ${b}`; ans = a * b;
+            } else {
+                ans = Math.floor(Math.random() * 10);
+                b = Math.floor(Math.random() * 9) + 1;
+                a = ans * b;
+                txt = `${a} ÷ ${b}`;
+            }
+        }
+        ops = [ans, ans + 2, ans - 1, ans + 5].sort(() => Math.random() - 0.5);
+        return { txt, ans, options: ops };
+    }
+
+    function gameOver() {
+        gameActive = false;
+        document.getElementById('question-box').style.display = 'none';
+        document.getElementById('game-over').style.display = 'flex';
+        playTone(150, 'sawtooth', 0.5);
+    }
+
+    function animate() {
+        if (!gameActive) return;
+
+        ctx.clearRect(0,0, canvas.width, canvas.height);
+        
+        // Speed & Fuel Logic
+        if (keys.gas) { 
+            speed = Math.min(speed + 0.1, maxSpeed); 
+            fuel -= 0.05;
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            if (Math.random() > 0.9) playTone(100 + speed*10, 'sawtooth', 0.05);
+        } else { 
+            speed = Math.max(speed - 0.1, 0); 
+        }
+
+        if (fuel <= 0) gameOver();
+
+        roadY += speed;
+        drawRoad();
+
+        // Player Movement
+        if (keys.left && player.x > 50) player.x -= 3;
+        if (keys.right && player.x < 220) player.x += 3;
+        drawCar(player, 'red');
+
+        // Enemies
+        createEnemy();
+        enemies.forEach((en, index) => {
+            en.y += speed * 0.5 + 2;
+            drawCar(en, 'yellow');
+            
+            // Collision
+            if (player.x < en.x + en.w && player.x + player.w > en.x &&
+                player.y < en.y + en.h && player.y + player.h > en.y) {
+                playTone(200, 'square', 0.3);
+                showQuestion();
+            }
+            if (en.y > canvas.height) enemies.splice(index, 1);
+        });
+
+        // UI Text
+        ctx.fillStyle = "white";
+        ctx.font = "16px Cairo";
+        ctx.fillText(`السرعة: ${Math.floor(speed * 50)} كم/س`, 60, 30);
+        ctx.fillText(`الوقود: ${Math.floor(fuel)}%`, 60, 55);
+
+        requestAnimationFrame(animate);
+    }
+
+    // Service Worker for Offline access
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('data:application/javascript,self.addEventListener("fetch", (e) => e.respondWith(fetch(e.request)))');
+        });
+    }
+</script>
+</body>
+</html>
