@@ -3,45 +3,53 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Road Fighter Math - سلمان الجنيدي</title>
+    <title>Road Fighter Pro - سلمان الجنيدي</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@900&display=swap');
         
         body {
-            margin: 0; background: #000; font-family: 'Cairo', sans-serif;
+            margin: 0; background: #222; font-family: 'Cairo', sans-serif;
             color: white; overflow: hidden; display: flex; flex-direction: column; align-items: center;
+            touch-action: none;
         }
 
-        #game-container {
-            position: relative; width: 100vw; max-width: 450px; height: 80vh;
-            border: 4px solid #333; overflow: hidden; background: #444;
+        #game-wrapper {
+            position: relative; width: 100%; max-width: 450px; height: 85vh;
+            border: 6px solid #111; background: #333; overflow: hidden;
         }
 
         canvas { width: 100%; height: 100%; image-rendering: pixelated; }
 
         /* شاشات الواجهة */
         .overlay {
-            position: absolute; inset: 0; background: rgba(0,0,0,0.9);
+            position: absolute; inset: 0; background: rgba(0,0,0,0.85);
             display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 100;
+            text-align: center; padding: 20px;
+        }
+
+        .game-title {
+            color: #ffeb3b; font-size: 2.5rem; -webkit-text-stroke: 1.5px #d32f2f;
+            margin-bottom: 30px; line-height: 1.2;
         }
 
         .btn {
-            background: #d32f2f; color: white; border: 4px solid #fff; padding: 15px 30px;
-            margin: 10px; cursor: pointer; font-size: 1.4rem; font-weight: bold;
-            box-shadow: 5px 5px 0 #5d0000; width: 220px;
+            background: #d32f2f; color: white; border: 3px solid #fff; padding: 12px;
+            margin: 8px; cursor: pointer; font-size: 1.2rem; font-weight: bold;
+            box-shadow: 4px 4px 0 #5d0000; width: 200px; border-radius: 4px;
         }
 
-        /* نافذة الأسئلة */
+        /* نافذة السؤال - محسنة جداً */
         #question-box {
-            position: absolute; top: 15%; left: 5%; width: 90%; background: #1a237e;
-            border: 4px solid #fff; border-radius: 20px; display: none;
-            flex-direction: column; align-items: center; padding: 20px; z-index: 200;
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 85%; background: #0d47a1; border: 4px solid #fff;
+            padding: 15px; z-index: 200; display: none; flex-direction: column;
+            border-radius: 15px; box-shadow: 0 0 50px #000;
         }
 
-        .ans-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; }
+        .ans-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 15px; }
         .ans-btn {
-            background: #fff; color: #1a237e; border: none; padding: 15px;
-            font-size: 1.5rem; font-weight: bold; border-radius: 10px; cursor: pointer;
+            background: #fff; color: #0d47a1; border: none; padding: 12px;
+            font-size: 1.3rem; font-weight: bold; border-radius: 8px;
         }
 
         /* التحكم */
@@ -50,39 +58,36 @@
             background: #111; justify-content: space-around; align-items: center;
         }
         .ctrl-btn {
-            width: 70px; height: 70px; background: #333; border: 3px solid #666;
-            border-radius: 15px; display: flex; justify-content: center; align-items: center;
-            font-size: 2rem; user-select: none;
+            width: 65px; height: 65px; background: #444; border: 3px solid #777;
+            border-radius: 50%; display: flex; justify-content: center; align-items: center;
+            font-size: 1.8rem; user-select: none;
         }
-        #gas-btn { background: #2e7d32; width: 85px; height: 85px; }
+        #gas-btn { background: #2e7d32; width: 80px; height: 80px; border-color: #4caf50; }
 
-        footer { padding: 10px; text-align: center; font-size: 0.8rem; }
-        .social-icons { display: flex; gap: 15px; justify-content: center; margin-top: 5px; }
-        .social-icons a { text-decoration: none; font-size: 1.2rem; }
+        footer { font-size: 0.75rem; padding: 5px; background: #000; width: 100%; text-align: center; }
     </style>
 </head>
 <body>
 
-<div id="game-container">
+<div id="game-wrapper">
     <canvas id="gameCanvas"></canvas>
 
     <div id="start-screen" class="overlay">
-        <h1 style="color: #fdd835; font-size: 3rem; -webkit-text-stroke: 1px red;">ROAD FIGHTER</h1>
-        <p style="font-size: 1.2rem;">اختر المستوى للبدء:</p>
+        <div class="game-title">ROAD FIGHTER<br>MATH</div>
         <button class="btn" onclick="game.init('easy')">مبتدئ (＋/－)</button>
         <button class="btn" onclick="game.init('medium')">متوسط (×)</button>
         <button class="btn" onclick="game.init('hard')">محترف (÷/×)</button>
     </div>
 
     <div id="question-box">
-        <h2 id="q-text" style="font-size: 2rem; margin: 0;">السؤال</h2>
-        <div id="q-timer" style="font-size: 1.5rem; color: #ffeb3b;">١٥</div>
+        <div id="q-timer" style="color: #ff5252; font-size: 1.5rem; text-align: left;">١٥</div>
+        <h2 id="q-text" style="margin: 10px 0; font-size: 1.8rem;">السؤال؟</h2>
         <div id="options" class="ans-grid"></div>
     </div>
 
     <div id="game-over" class="overlay" style="display:none">
-        <h1 style="color: #ff5252;">حظاً أوفر في المرة القادمة</h1>
-        <button class="btn" onclick="location.reload()">إعادة</button>
+        <h1 id="status-msg" style="color: #ff5252;">حظاً أوفر!</h1>
+        <button class="btn" onclick="location.reload()">إعادة المحاولة</button>
     </div>
 </div>
 
@@ -93,16 +98,12 @@
 </div>
 
 <footer>
-    <div>جميع الحقوق محفوظة لـ سلمان الجنيدي</div>
-    <div class="social-icons">
-        <a href="https://wa.me/966566996166" style="color: #4caf50;">💬 واتساب</a>
-        <a href="https://snapchat.com/t/2fysJJzn" style="color: #ffeb3b;">👻 سناب</a>
-    </div>
+    جميع الحقوق محفوظة لـ سلمان الجنيدي
+    <a href="https://wa.me/966566996166" style="color:#4caf50; margin:0 10px;">واتساب</a>
+    <a href="https://snapchat.com/t/2fysJJzn" style="color:#ffeb3b;">سناب</a>
 </footer>
 
 <script>
-/** * تحويل الأرقام إلى عربية
- */
 const toAr = (n) => n.toString().replace(/\d/g, d => "٠١٢٣٤٥٦٧٨٩"[d]);
 
 const canvas = document.getElementById('gameCanvas');
@@ -114,72 +115,92 @@ const game = {
     active: false,
     speed: 0,
     fuel: 100,
+    distance: 0,
+    maxDistance: 2000, // طول المرحلة
+    stage: 1,
     roadY: 0,
-    playerX: 180,
+    playerX: 182,
     enemies: [],
+    scenery: [],
     difficulty: 'easy',
-    lanes: [75, 145, 215, 285], // مسارات محددة لمنع التداخل
+    lanes: [80, 150, 220, 290],
 
     init(lvl) {
         this.difficulty = lvl;
         this.active = true;
+        this.distance = 0;
         document.getElementById('start-screen').style.display = 'none';
+        // توليد الأشجار
+        for(let i=0; i<10; i++) this.scenery.push({y: i*100, side: i%2});
         this.loop();
     },
 
     drawCar(x, y, type) {
-        // رسم سيارة بأسلوب بكسل ارت
-        const color = type === 'player' ? '#f44336' : '#ffeb3b';
+        const color = type === 'player' ? '#f44336' : '#ffc107';
+        // Shadow
+        ctx.fillStyle = 'rgba(0,0,0,0.3)';
+        ctx.fillRect(x+4, y+4, 35, 55);
+        // Body
         ctx.fillStyle = color;
-        ctx.fillRect(x, y, 35, 60); // الجسم الرئيسي
-        // السقف والزجاج
-        ctx.fillStyle = '#222';
-        ctx.fillRect(x+5, y+15, 25, 20);
-        // المصابيح
-        ctx.fillStyle = type === 'player' ? '#fff' : '#f44336';
-        ctx.fillRect(x+5, y, 8, 5); ctx.fillRect(x+22, y, 8, 5);
-        // الإطارات
-        ctx.fillStyle = '#000';
-        ctx.fillRect(x-4, y+8, 4, 12); ctx.fillRect(x+35, y+8, 4, 12);
-        ctx.fillRect(x-4, y+40, 4, 12); ctx.fillRect(x+35, y+40, 4, 12);
+        ctx.fillRect(x, y, 35, 55);
+        // Windshield
+        ctx.fillStyle = '#90caf9';
+        ctx.fillRect(x+4, y+10, 27, 12);
+        // Roof
+        ctx.fillStyle = color;
+        ctx.globalAlpha = 0.7;
+        ctx.fillRect(x+4, y+22, 27, 20);
+        ctx.globalAlpha = 1.0;
+        // Lights
+        ctx.fillStyle = '#fff';
+        ctx.fillRect(x+4, y+2, 8, 4); ctx.fillRect(x+23, y+2, 8, 4);
     },
 
-    spawnEnemy() {
-        if (this.enemies.length < 3 && Math.random() < 0.03) {
-            const lane = this.lanes[Math.floor(Math.random() * this.lanes.length)];
-            // التأكد من أن المسار خالٍ في الأعلى
-            if (!this.enemies.some(e => e.y < 100 && e.x === lane)) {
-                this.enemies.push({ x: lane, y: -100, speed: 2 + Math.random() * 2 });
-            }
-        }
+    drawScenery() {
+        this.scenery.forEach(s => {
+            s.y += this.speed;
+            if(s.y > canvas.height) s.y = -50;
+            ctx.fillStyle = '#1b5e20'; // Tree color
+            let x = s.side === 0 ? 15 : 355;
+            // Draw simple pixel tree
+            ctx.fillRect(x, s.y, 30, 30);
+            ctx.fillStyle = '#388e3c';
+            ctx.fillRect(x+5, s.y+5, 20, 20);
+        });
     },
 
     update() {
         if (!this.active) return;
 
         if (input.gas) {
-            this.speed = Math.min(this.speed + 0.15, 10);
-            this.fuel -= 0.04;
+            this.speed = Math.min(this.speed + 0.12, 8 + this.stage);
+            this.fuel -= 0.05;
+            this.distance += this.speed * 0.1;
         } else {
-            this.speed = Math.max(this.speed - 0.1, 0);
+            this.speed = Math.max(this.speed - 0.08, 0);
         }
 
-        if (this.fuel <= 0) this.over();
+        if (this.fuel <= 0) this.over("انتهى الوقود!");
+        if (this.distance >= this.maxDistance) this.nextStage();
 
         this.roadY += this.speed;
-        if (input.left && this.playerX > 60) this.playerX -= 5;
-        if (input.right && this.playerX < 305) this.playerX += 5;
+        if (input.left && this.playerX > 65) this.playerX -= 5;
+        if (input.right && this.playerX < 300) this.playerX += 5;
 
-        this.spawnEnemy();
+        // ظهور الأعداء
+        if (this.enemies.length < 3 && Math.random() < 0.03) {
+            const lane = this.lanes[Math.floor(Math.random() * this.lanes.length)];
+            if (!this.enemies.some(e => e.y < 150 && e.x === lane)) {
+                this.enemies.push({ x: lane, y: -100, s: 1 + Math.random() * 2 });
+            }
+        }
+
         this.enemies.forEach((en, i) => {
-            en.y += (this.speed * 0.5) + en.speed;
-            
-            // تصادم دقيق
+            en.y += (this.speed * 0.5) + en.s;
             if (this.playerX < en.x + 35 && this.playerX + 35 > en.x &&
-                500 < en.y + 60 && 500 + 60 > en.y) {
+                500 < en.y + 55 && 500 + 55 > en.y) {
                 this.ask();
             }
-
             if (en.y > canvas.height) this.enemies.splice(i, 1);
         });
     },
@@ -187,26 +208,46 @@ const game = {
     draw() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         
-        // رسم الطريق بستايل صخر
-        ctx.fillStyle = '#2e7d32'; ctx.fillRect(0,0, canvas.width, canvas.height); // عشب
-        ctx.fillStyle = '#424242'; ctx.fillRect(50, 0, 300, canvas.height); // طريق
+        // Background & Road
+        ctx.fillStyle = '#2e7d32'; ctx.fillRect(0,0, canvas.width, canvas.height);
+        ctx.fillStyle = '#444'; ctx.fillRect(60, 0, 280, canvas.height);
         
-        // خطوط الطريق
-        ctx.strokeStyle = '#fff'; ctx.setLineDash([30, 30]);
+        // Road Marks
+        ctx.strokeStyle = '#fff'; ctx.setLineDash([30, 40]);
         ctx.lineDashOffset = -this.roadY;
         ctx.lineWidth = 4;
-        [125, 200, 275].forEach(x => {
+        [130, 200, 270].forEach(x => {
             ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke();
         });
 
-        // اللاعب والأعداء
+        this.drawScenery();
+
+        // Finish Line
+        if (this.maxDistance - this.distance < 500) {
+            let lineY = canvas.height - (this.maxDistance - this.distance) - 100;
+            ctx.fillStyle = '#fff';
+            for(let i=0; i<7; i++) ctx.fillRect(60 + i*40, lineY, 20, 20);
+        }
+
         this.drawCar(this.playerX, 500, 'player');
         this.enemies.forEach(en => this.drawCar(en.x, en.y, 'enemy'));
 
-        // العدادات بالأرقام العربية
-        ctx.fillStyle = "white"; ctx.font = "bold 22px Cairo";
-        ctx.fillText(`الوقود: ${toAr(Math.ceil(this.fuel))}%`, 60, 40);
-        ctx.fillText(`السرعة: ${toAr(Math.floor(this.speed * 40))}`, 250, 40);
+        // HUD - Fixed position
+        ctx.fillStyle = "rgba(0,0,0,0.6)";
+        ctx.fillRect(0, 0, canvas.width, 50);
+        ctx.fillStyle = "#ffeb3b"; ctx.font = "bold 18px Cairo";
+        ctx.fillText(`وقود: ${toAr(Math.ceil(this.fuel))}%`, 20, 32);
+        ctx.fillText(`سرعة: ${toAr(Math.floor(this.speed * 40))}`, 155, 32);
+        ctx.fillText(`مرحلة: ${toAr(this.stage)}`, 310, 32);
+    },
+
+    nextStage() {
+        this.stage++;
+        this.distance = 0;
+        this.fuel = 100;
+        this.enemies = [];
+        this.speed = 0;
+        alert(`أحسنت! انتقلت للمرحلة ${toAr(this.stage)}`);
     },
 
     ask() {
@@ -215,7 +256,6 @@ const game = {
         const qData = this.genQ();
         box.style.display = 'flex';
         document.getElementById('q-text').innerText = qData.txt;
-        
         const optsDiv = document.getElementById('options');
         optsDiv.innerHTML = '';
         
@@ -226,7 +266,7 @@ const game = {
         const timerId = setInterval(() => {
             timeLeft--;
             timerEl.innerText = toAr(timeLeft);
-            if (timeLeft <= 0) { clearInterval(timerId); this.over(); }
+            if (timeLeft <= 0) { clearInterval(timerId); this.over("انتهى الوقت!"); }
         }, 1000);
 
         qData.opts.forEach(o => {
@@ -238,7 +278,7 @@ const game = {
                 if (o === qData.ans) {
                     box.style.display = 'none';
                     this.fuel = 100; this.enemies = []; this.active = true; this.loop();
-                } else { this.over(); }
+                } else { this.over("إجابة خاطئة!"); }
             };
             optsDiv.appendChild(b);
         });
@@ -262,13 +302,14 @@ const game = {
                 a = ans * b; txt = `${toAr(a)} ÷ ${toAr(b)}`;
             }
         }
-        let opts = [ans, ans+1, ans+10, ans-1].filter(n => n >= 0).sort(() => Math.random()-0.5);
+        let opts = [ans, ans+1, ans+5, ans-1].filter(n => n >= 0).sort(() => Math.random()-0.5);
         return { txt, ans, opts: [...new Set(opts)].slice(0,4) };
     },
 
-    over() {
+    over(msg) {
         this.active = false;
         document.getElementById('question-box').style.display = 'none';
+        document.getElementById('status-msg').innerText = msg + "\nحظاً أوفر في المرة القادمة";
         document.getElementById('game-over').style.display = 'flex';
     },
 
@@ -281,18 +322,16 @@ const game = {
 };
 
 const input = { left: false, right: false, gas: false };
-// كيبورد
 window.onkeydown = (e) => {
-    if (e.key === 'ArrowLeft' || e.key === 'a') input.left = true;
-    if (e.key === 'ArrowRight' || e.key === 'd') input.right = true;
-    if (e.key === 'ArrowUp' || e.key === 'w' || e.key === ' ') input.gas = true;
+    if (e.key === 'ArrowLeft') input.left = true;
+    if (e.key === 'ArrowRight') input.right = true;
+    if (e.key === 'ArrowUp' || e.key === ' ') input.gas = true;
 };
 window.onkeyup = (e) => {
-    if (e.key === 'ArrowLeft' || e.key === 'a') input.left = false;
-    if (e.key === 'ArrowRight' || e.key === 'd') input.right = false;
-    if (e.key === 'ArrowUp' || e.key === 'w' || e.key === ' ') input.gas = false;
+    if (e.key === 'ArrowLeft') input.left = false;
+    if (e.key === 'ArrowRight') input.right = false;
+    if (e.key === 'ArrowUp' || e.key === ' ') input.gas = false;
 };
-// لمس
 const setupBtn = (id, key) => {
     const el = document.getElementById(id);
     el.onpointerdown = (e) => { e.preventDefault(); input[key] = true; };
