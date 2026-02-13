@@ -3,62 +3,73 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Road Fighter Math - سلمان الجنيدي</title>
+    <title>Road Fighter - Salman Al-Junaidi</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@900&display=swap');
         
         body {
-            margin: 0; background: #000; font-family: 'Cairo', sans-serif;
+            margin: 0; background: #222; font-family: 'Cairo', sans-serif;
             color: white; overflow: hidden; display: flex; flex-direction: column; align-items: center;
         }
 
-        #game-wrapper {
-            position: relative; width: 100vw; max-width: 420px; height: 85vh;
-            border: 4px solid #333; overflow: hidden;
+        #game-container {
+            position: relative; width: 100vw; max-width: 450px; height: 82vh;
+            border: 5px solid #444; background: #333; overflow: hidden;
+            box-shadow: 0 0 50px rgba(0,0,0,0.8);
         }
 
         canvas { width: 100%; height: 100%; image-rendering: pixelated; }
 
+        /* HUD */
         #hud {
-            position: absolute; top: 0; left: 0; width: 100%; height: 50px;
-            background: rgba(0,0,0,0.8); display: flex; justify-content: space-around;
-            align-items: center; z-index: 50; border-bottom: 2px solid #f1c40f;
+            position: absolute; top: 0; left: 0; width: 100%; height: 60px;
+            background: rgba(0,0,0,0.85); display: flex; justify-content: space-around;
+            align-items: center; z-index: 50; border-bottom: 3px solid #f1c40f;
+            font-size: 1.1rem; color: #fff;
         }
 
         .overlay {
-            position: absolute; inset: 0; background: rgba(0,0,0,0.9);
+            position: absolute; inset: 0; background: rgba(0,0,0,0.95);
             display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 100;
+            text-align: center;
+        }
+
+        .game-title {
+            color: #ff3d00; font-size: 3rem; text-shadow: 3px 3px #fff; margin-bottom: 10px;
         }
 
         .btn {
-            background: #d32f2f; color: white; border: 3px solid #fff; padding: 12px 25px;
-            margin: 8px; cursor: pointer; font-size: 1.2rem; font-weight: bold; border-radius: 10px;
+            background: #d32f2f; color: white; border: 3px solid #fff; padding: 15px 30px;
+            margin: 10px; cursor: pointer; font-size: 1.3rem; font-weight: bold; border-radius: 12px;
+            box-shadow: 0 5px 0 #5d0000; transition: 0.1s;
         }
+
+        .btn:active { transform: translateY(4px); box-shadow: 0 1px 0 #5d0000; }
 
         #question-box {
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            width: 85%; background: #fff; color: #222; border: 5px solid #d32f2f;
-            padding: 20px; z-index: 200; display: none; flex-direction: column; border-radius: 20px;
+            width: 85%; background: #fff; color: #111; border: 6px solid #1e88e5;
+            padding: 25px; z-index: 200; display: none; flex-direction: column; border-radius: 25px;
         }
 
-        .ans-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
-        .ans-btn { background: #1976d2; color: white; border: none; padding: 15px; font-size: 1.4rem; border-radius: 10px; }
-
-        .footer-info { margin-top: 10px; font-size: 0.9rem; text-align: center; }
-        .social-btns { display: flex; gap: 20px; margin-top: 10px; }
-        .social-btns a { text-decoration: none; font-size: 1.5rem; }
+        .ans-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 20px; }
+        .ans-btn { background: #1e88e5; color: white; border: none; padding: 18px; font-size: 1.6rem; border-radius: 12px; font-weight: 900; }
 
         #controls {
-            display: flex; width: 100%; max-width: 420px; height: 12vh;
+            display: flex; width: 100%; max-width: 450px; height: 13vh;
             background: #111; justify-content: space-around; align-items: center;
         }
-        .ctrl-btn { width: 65px; height: 65px; background: #333; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 1.5rem; user-select: none; }
-        #gas-btn { background: #2e7d32; width: 80px; border: 3px solid #fff; }
+        .ctrl-btn { width: 70px; height: 70px; background: #333; border: 2px solid #666; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 2rem; user-select: none; }
+        #gas-btn { background: #2e7d32; width: 90px; height: 90px; border: 4px solid #fff; font-size: 1.2rem; font-weight: bold; }
+
+        .rights { margin-top: 15px; font-size: 0.8rem; color: #aaa; }
+        .social { display: flex; gap: 20px; margin-top: 10px; }
+        .social img { width: 40px; cursor: pointer; }
     </style>
 </head>
 <body>
 
-<div id="game-wrapper">
+<div id="game-container">
     <div id="hud">
         <div id="hud-fuel">الوقود: ١٠٠٪</div>
         <div id="hud-speed">السرعة: ٠</div>
@@ -68,51 +79,51 @@
     <canvas id="gameCanvas"></canvas>
 
     <div id="start-screen" class="overlay">
-        <h1 style="color:#f1c40f; font-size: 2.5rem; margin:0;">ROAD FIGHTER</h1>
-        <p>بإشراف سلمان الجنيدي</p>
-        <button class="btn" onclick="game.start('easy')">مبتدئ</button>
-        <button class="btn" onclick="game.start('medium')">متوسط</button>
-        <button class="btn" onclick="game.start('hard')">محترف</button>
+        <h1 class="game-title">ROAD FIGHTER</h1>
+        <p style="font-size: 1.5rem;">بإشراف سلمان الجنيدي</p>
+        <button class="btn" onclick="game.start('easy')">مبتدئ (＋/－)</button>
+        <button class="btn" onclick="game.start('medium')">متوسط (×)</button>
+        <button class="btn" onclick="game.start('hard')">محترف (÷/×)</button>
         
-        <div class="footer-info">جميع الحقوق محفوظة لـ سلمان الجنيدي</div>
-        <div class="social-btns">
-            <a href="https://wa.me/966566996166">🟢</a>
-            <a href="https://snapchat.com/t/2fysJJzn">🟡</a>
+        <div class="rights">جميع الحقوق محفوظة لـ سلمان الجنيدي</div>
+        <div class="social">
+            <a href="https://wa.me/966566996166" target="_blank">🟢 واتساب</a>
+            <a href="https://snapchat.com/t/2fysJJzn" target="_blank">🟡 سناب شات</a>
         </div>
     </div>
 
     <div id="question-box">
-        <h2 id="q-text" style="text-align:center; font-size: 2rem;">السؤال</h2>
+        <h2 id="q-text" style="text-align:center; font-size: 2.2rem; margin:0;">السؤال</h2>
         <div id="options" class="ans-grid"></div>
     </div>
 
     <div id="game-over" class="overlay" style="display:none">
-        <h1 id="over-reason" style="color:red;">انتهت اللعبة</h1>
-        <button class="btn" onclick="location.reload()">حاول مرة أخرى</button>
+        <h1 id="over-reason" style="color:#ff5252; font-size: 2.5rem;">انتهت اللعبة</h1>
+        <button class="btn" onclick="location.reload()">إعادة المحاولة</button>
     </div>
 </div>
 
 <div id="controls">
     <div class="ctrl-btn" id="l-btn">◀</div>
-    <div class="ctrl-btn" id="gas-btn">GAS</div>
+    <div class="ctrl-btn" id="gas-btn">ادعس ⛽</div>
     <div class="ctrl-btn" id="r-btn">▶</div>
 </div>
 
 <script>
 const toAr = (n) => n.toString().replace(/\d/g, d => "٠١٢٣٤٥٦٧٨٩"[d]);
 
-// النظام الصوتي
+// النظام الصوتي Arcade
 const audio = {
     ctx: null,
     init() { if(!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)(); },
-    play(freq, type, dur) {
+    play(freq, type, dur, vol=0.1) {
         this.init();
         const osc = this.ctx.createOscillator();
-        const gain = this.ctx.createGain();
+        const g = this.ctx.createGain();
         osc.type = type;
         osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
-        gain.gain.setValueAtTime(0.1, this.ctx.currentTime);
-        osc.connect(gain); gain.connect(this.ctx.destination);
+        g.gain.setValueAtTime(vol, this.ctx.currentTime);
+        osc.connect(g); g.connect(this.ctx.destination);
         osc.start(); osc.stop(this.ctx.currentTime + dur);
     }
 };
@@ -123,103 +134,135 @@ canvas.width = 400; canvas.height = 600;
 
 const game = {
     active: false, speed: 0, fuel: 100, stage: 1, dist: 0,
-    playerX: 182, enemies: [], roadY: 0, difficulty: 'easy',
-    colors: [
-        { grass: '#2e7d32', road: '#444' }, // غابة
-        { grass: '#c6a700', road: '#555' }, // صحراء
-        { grass: '#1a237e', road: '#222' }  // ليل
-    ],
+    playerX: 182, enemies: [], trees: [], roadY: 0, difficulty: 'easy',
 
     start(lvl) {
         this.difficulty = lvl; this.active = true;
         document.getElementById('start-screen').style.display = 'none';
+        for(let i=0; i<8; i++) this.trees.push({x: i%2===0?20:350, y: i*120});
         this.loop();
     },
 
+    // رسم سيارة احترافية حقيقية
     drawCar(x, y, color, isPlayer) {
-        ctx.fillStyle = color; ctx.fillRect(x, y, 36, 60); // الجسم
-        ctx.fillStyle = '#000'; ctx.fillRect(x+4, y+10, 28, 12); // زجاج
-        ctx.fillStyle = isPlayer ? '#fff' : '#f44336'; 
-        ctx.fillRect(x+5, y, 6, 3); ctx.fillRect(x+25, y, 6, 3); // مصابيح
+        ctx.save();
+        ctx.translate(x, y);
+        // جسم السيارة
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.roundRect(0, 0, 38, 65, 10);
+        ctx.fill();
+        // الزجاج المظلل
+        ctx.fillStyle = '#1a1a1a';
+        ctx.fillRect(5, 12, 28, 15); // الأمامي
+        ctx.fillRect(5, 45, 28, 8);  // الخلفي
+        // إطارات
+        ctx.fillStyle = '#000';
+        ctx.fillRect(-3, 8, 5, 15); ctx.fillRect(36, 8, 5, 15);
+        ctx.fillRect(-3, 40, 5, 15); ctx.fillRect(36, 40, 5, 15);
+        // المصابيح
+        ctx.fillStyle = isPlayer ? '#fff' : '#ff5252';
+        ctx.fillRect(5, 2, 8, 4); ctx.fillRect(25, 2, 8, 4);
+        // تفاصيل السباق
+        ctx.strokeStyle = 'rgba(255,255,255,0.4)';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(4, 4, 30, 57);
+        ctx.restore();
+    },
+
+    drawTree(x, y) {
+        ctx.fillStyle = '#4e342e'; ctx.fillRect(x+12, y+35, 8, 15); // جذع
+        ctx.fillStyle = '#1b5e20'; // أوراق
+        ctx.beginPath(); ctx.moveTo(x+16, y); ctx.lineTo(x+35, y+40); ctx.lineTo(x-3, y+40); ctx.fill();
     },
 
     update() {
         if (!this.active) return;
 
         if (input.gas) {
-            this.speed = Math.min(this.speed + 0.1, 8 + this.stage);
-            this.fuel -= 0.04;
+            this.speed = Math.min(this.speed + 0.15, 9 + this.stage);
+            this.fuel -= 0.05;
             this.dist += this.speed;
-            if(Math.random() > 0.9) audio.play(100 + this.speed*10, 'sawtooth', 0.05);
+            if(Math.random() > 0.9) audio.play(100 + this.speed*15, 'sawtooth', 0.05, 0.05);
         } else {
-            this.speed = Math.max(this.speed - 0.15, 0);
+            this.speed = Math.max(this.speed - 0.1, 0);
         }
 
-        if (this.fuel <= 0) this.end("انتهى الوقود!");
-        
-        // الانتقال للمرحلة
-        if (this.dist > 3000) {
-            this.speed = 0; this.active = false;
-            audio.play(500, 'square', 0.5);
-            setTimeout(() => { 
-                this.stage++; this.dist = 0; this.fuel = 100; 
-                this.enemies = []; this.active = true; this.loop();
-            }, 2000);
-            return;
-        }
+        if (this.fuel <= 0) this.end("انتهى الوقود يا بطل!");
 
         this.roadY += this.speed;
-        if (input.left && this.playerX > 60) this.playerX -= 5;
-        if (input.right && this.playerX < 304) this.playerX += 5;
+        if (input.left && this.playerX > 65) this.playerX -= 6;
+        if (input.right && this.playerX < 300) this.playerX += 6;
 
-        // الأعداء يتحركون بالنسبة لسرعتك (لا يرجعون للخلف)
-        if (this.speed > 0 && Math.random() < 0.02) {
-            this.enemies.push({x: [80,150,220,290][Math.floor(Math.random()*4)], y: -100});
+        // الأشجار تتحرك بجدية
+        this.trees.forEach(t => {
+            t.y += this.speed;
+            if (t.y > canvas.height) t.y = -100;
+        });
+
+        // الأعداء (يتوقفون عند وقوفك)
+        if (this.speed > 0 && this.enemies.length < 3 && Math.random() < 0.03) {
+            let lx = [80, 150, 220, 290][Math.floor(Math.random()*4)];
+            if(!this.enemies.some(e => e.y < 150 && e.x === lx)) {
+                this.enemies.push({x: lx, y: -100, s: 1 + Math.random()});
+            }
         }
 
         this.enemies.forEach((en, i) => {
-            // سرعة العدو = (سرعتك * 0.5) + سرعة ثابتة بسيطة للامام
-            en.y += (this.speed * 0.5) + 1; 
-            if (this.playerX < en.x + 36 && this.playerX + 36 > en.x && 500 < en.y + 60 && 560 > en.y) {
+            en.y += (this.speed * 0.6) + en.s; 
+            if (this.playerX < en.x + 38 && this.playerX + 38 > en.x && 500 < en.y + 65 && 565 > en.y) {
                 this.ask();
             }
             if (en.y > canvas.height) this.enemies.splice(i, 1);
         });
 
+        if (this.dist > 4000) this.nextStage();
+
         document.getElementById('hud-fuel').innerText = `الوقود: ${toAr(Math.ceil(this.fuel))}٪`;
-        document.getElementById('hud-speed').innerText = `السرعة: ${toAr(Math.floor(this.speed * 30))}`;
+        document.getElementById('hud-speed').innerText = `السرعة: ${toAr(Math.floor(this.speed * 38))} كم/س`;
         document.getElementById('hud-stage').innerText = `المرحلة: ${toAr(this.stage)}`;
     },
 
     draw() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-        const theme = this.colors[(this.stage - 1) % 3];
         
-        ctx.fillStyle = theme.grass; ctx.fillRect(0,0, canvas.width, canvas.height);
-        ctx.fillStyle = theme.road; ctx.fillRect(50, 0, 300, canvas.height);
+        // البيئة
+        ctx.fillStyle = '#2e7d32'; ctx.fillRect(0,0, canvas.width, canvas.height); // عشب
+        ctx.fillStyle = '#444'; ctx.fillRect(60, 0, 280, canvas.height); // طريق
         
-        // خطوط الطريق
-        ctx.strokeStyle = '#fff'; ctx.setLineDash([30, 30]);
+        // أرصفة الطريق (كرنيش)
+        for(let i=-1; i<16; i++) {
+            let y = (i*40) + (this.roadY % 40);
+            ctx.fillStyle = (Math.floor(this.roadY/40)+i)%2===0 ? '#fff' : '#d32f2f';
+            ctx.fillRect(60, y, 8, 40);
+            ctx.fillRect(332, y, 8, 40);
+        }
+
+        // خطوط المسارات
+        ctx.strokeStyle = 'rgba(255,255,255,0.4)'; ctx.setLineDash([25, 35]);
         ctx.lineDashOffset = -this.roadY;
-        [125, 200, 275].forEach(lx => {
+        [130, 200, 270].forEach(lx => {
             ctx.beginPath(); ctx.moveTo(lx, 0); ctx.lineTo(lx, canvas.height); ctx.stroke();
         });
 
+        this.trees.forEach(t => this.drawTree(t.x, t.y));
+
         // خط النهاية
-        if (this.dist > 2500) {
-            let lineY = 500 - (this.dist - 2500);
+        if (this.dist > 3500) {
+            let ly = 500 - (this.dist - 3500);
             ctx.fillStyle = '#fff';
-            for(let i=0; i<8; i++) ctx.fillRect(50 + i*40, lineY, 20, 20);
+            for(let i=0; i<7; i++) ctx.fillRect(68 + i*40, ly, 20, 20);
         }
 
-        this.drawCar(this.playerX, 500, '#e53935', true);
-        this.enemies.forEach(en => this.drawCar(en.x, en.y, '#fdd835', false));
+        this.drawCar(this.playerX, 500, '#d32f2f', true);
+        this.enemies.forEach(en => this.drawCar(en.x, en.y, '#ffc107', false));
     },
 
     ask() {
-        this.active = false; audio.play(200, 'square', 0.2);
+        this.active = false; audio.play(200, 'square', 0.3);
         const qData = this.genQ();
-        document.getElementById('question-box').style.display = 'flex';
+        const box = document.getElementById('question-box');
+        box.style.display = 'flex';
         document.getElementById('q-text').innerText = qData.txt;
         const optsDiv = document.getElementById('options');
         optsDiv.innerHTML = '';
@@ -230,9 +273,9 @@ const game = {
             b.onclick = () => {
                 if (o === qData.ans) {
                     audio.play(800, 'sine', 0.2);
-                    document.getElementById('question-box').style.display = 'none';
+                    box.style.display = 'none';
                     this.fuel = 100; this.enemies = []; this.active = true; this.loop();
-                } else { this.end("إجابة خاطئة!"); }
+                } else { this.end("إجابة خاطئة! حاول مرة أخرى."); }
             };
             optsDiv.appendChild(b);
         });
@@ -240,19 +283,31 @@ const game = {
 
     genQ() {
         let a, b, ans, txt;
-        if (this.difficulty === 'easy') {
+        const lvl = this.difficulty;
+        if (lvl === 'easy') {
             a = Math.floor(Math.random()*11); b = Math.floor(Math.random()*11);
             if (Math.random()>0.5) { txt = `${toAr(a)} ＋ ${toAr(b)}`; ans = a+b; }
             else { txt = `${toAr(Math.max(a,b))} － ${toAr(Math.min(a,b))}`; ans = Math.max(a,b)-Math.min(a,b); }
-        } else if (this.difficulty === 'medium') {
+        } else if (lvl === 'medium') {
             a = Math.floor(Math.random()*11); b = Math.floor(Math.random()*11);
             txt = `${toAr(a)} × ${toAr(b)}`; ans = a*b;
         } else {
-            ans = Math.floor(Math.random()*10); b = Math.floor(Math.random()*9)+1;
-            a = ans * b; txt = `${toAr(a)} ÷ ${toAr(b)}`;
+            if(Math.random()>0.5) {
+                a = Math.floor(Math.random()*13); b = Math.floor(Math.random()*13);
+                txt = `${toAr(a)} × ${toAr(b)}`; ans = a*b;
+            } else {
+                ans = Math.floor(Math.random()*10); b = Math.floor(Math.random()*9)+1;
+                a = ans * b; txt = `${toAr(a)} ÷ ${toAr(b)}`;
+            }
         }
-        let opts = [ans, ans+1, ans+5, ans-1].filter(n => n >= 0).sort(() => Math.random()-0.5);
+        let opts = [ans, ans+1, ans+5, ans-2].filter(n => n >= 0).sort(() => Math.random()-0.5);
         return { txt, ans, opts: [...new Set(opts)].slice(0,4) };
+    },
+
+    nextStage() {
+        this.active = false; audio.play(1000, 'sine', 0.5);
+        alert(`كفو يا بطل! انتقلت للمرحلة ${toAr(++this.stage)}`);
+        this.dist = 0; this.fuel = 100; this.enemies = []; this.active = true; this.loop();
     },
 
     end(msg) {
@@ -271,21 +326,22 @@ const game = {
 
 const input = { left: false, right: false, gas: false };
 window.onkeydown = (e) => {
+    audio.init();
     if (e.key === 'ArrowLeft') input.left = true;
     if (e.key === 'ArrowRight') input.right = true;
-    if (e.key === 'ArrowUp' || e.key === ' ') { audio.init(); input.gas = true; }
+    if (e.key === 'ArrowUp' || e.key === ' ') input.gas = true;
 };
 window.onkeyup = (e) => {
     if (e.key === 'ArrowLeft') input.left = false;
     if (e.key === 'ArrowRight') input.right = false;
     if (e.key === 'ArrowUp' || e.key === ' ') input.gas = false;
 };
-const setupBtn = (id, key) => {
+const setup = (id, key) => {
     const el = document.getElementById(id);
     el.onpointerdown = (e) => { e.preventDefault(); audio.init(); input[key] = true; };
     el.onpointerup = (e) => { e.preventDefault(); input[key] = false; };
 };
-setupBtn('l-btn', 'left'); setupBtn('r-btn', 'right'); setupBtn('gas-btn', 'gas');
+setup('l-btn', 'left'); setup('r-btn', 'right'); setup('gas-btn', 'gas');
 </script>
 </body>
 </html>
